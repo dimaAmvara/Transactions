@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  miservicio_mysql:
+   image: mysql:5.7
+   environment:
+       - MYSQL_DATABASE=Transactions
+       - MYSQL_ROOT_PASSWORD=root
+       - MYSQL_USER=root
+       - MYSQL_PASSWORD=mipassword
+   volumes:
+       - ./volumenes/mysql:/var/lib/mysql
+   expose:
+       - 3306
+   ports:
+       - 3306:3306
+  miservicio_php:
+   image: php:7-apache
+   volumes:
+       - ./miweb/:/var/www/html
+   expose:
+       - 80
+   ports:
+       - 9082:80
+   links:
+       - miservicio_mysql
+   command: "bash -c 'docker-php-ext-install mysqli && docker-php-ext-enable mysqli && apachectl restart && tail -f /dev/null'"
+   command: "bash -c 'docker-php-ext-install mysqli && docker-php-ext-enable mysqli && docker-php-ext-install pdo pdo_mysql && apachectl restart && tail -f /dev/null'"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+      - miservicio_mysql
+    environment:
+      PMA_HOST: miservicio_mysql
+      PMA_PORT: 3306
+    ports:
+      - '8080:80'
+  apache:
+    image: 'bitnami/apache:latest'
+    ports:
+      - '81:80'
+      - '443:8443'
+    volumes:
+      - ./miweb/:/var/www/html
